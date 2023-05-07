@@ -1,0 +1,56 @@
+﻿using System;
+using System.Threading.Tasks;
+using Couchbase;
+using Couchbase.KeyValue;
+
+namespace Employee_Info.API.Data
+{
+    public static class StringExtension
+    {
+        public static string DefaultIfEmpty(this string str, string defaultValue)
+            => string.IsNullOrWhiteSpace(str) ? defaultValue : str;
+    }
+
+    public class EmployeeContext : IEmployeeContext
+    {
+        public ICluster Cluster { get; private set; }
+        public IBucket MasterDataBucket { get; private set; }
+        public ICouchbaseCollection PersonsCollection { get; private set; }
+
+        public EmployeeContext()
+        {
+            // TODO: get these variables via DI, possibly overriding config in appsettings.json
+#pragma warning disable CS8604 // Possible null reference argument.
+            var CB_HOST = Environment.GetEnvironmentVariable("CB_HOST").DefaultIfEmpty("localhost");
+#pragma warning disable CS8604 // Possible null reference argument.
+            var CB_USER = Environment.GetEnvironmentVariable("CB_USER").DefaultIfEmpty("Administrator");
+#pragma warning disable CS8604 // Possible null reference argument.
+            var CB_PSWD = Environment.GetEnvironmentVariable("CB_PSWD").DefaultIfEmpty("password");
+#pragma warning restore CS8604 // Possible null reference argument.
+
+            Console.WriteLine(
+                $"Connecting to couchbase://{CB_HOST} with {CB_USER} / {CB_PSWD}");
+
+            try
+            {
+                var task = Task.Run(async () => {
+                    var cluster = await Couchbase.Cluster.ConnectAsync(
+                        $"couchbase://{CB_HOST}",
+                        CB_USER,
+                        CB_PSWD);
+                    Cluster = cluster;
+                    MasterDataBucket = await Cluster.BucketAsync("master-data");
+                    var inventoryScope = await MasterDataBucket.ScopeAsync("inventory");
+                    PersonsCollection = await inventoryScope.CollectionAsync("persons");
+                });
+                task.Wait();
+            }
+            catch (AggregateException ae)
+            {
+                ae.Handle((x) => throw x);
+            }
+        }
+
+        
+    }
+}
