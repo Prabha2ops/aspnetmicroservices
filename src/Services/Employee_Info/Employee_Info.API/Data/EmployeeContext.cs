@@ -23,9 +23,9 @@ namespace Employee_Info.API.Data
 #pragma warning disable CS8604 // Possible null reference argument.
             var CB_HOST = Environment.GetEnvironmentVariable("CB_HOST").DefaultIfEmpty("localhost");
 #pragma warning disable CS8604 // Possible null reference argument.
-            var CB_USER = Environment.GetEnvironmentVariable("CB_USER").DefaultIfEmpty("Administrator");
+            var CB_USER = Environment.GetEnvironmentVariable("CB_USER").DefaultIfEmpty("services");
 #pragma warning disable CS8604 // Possible null reference argument.
-            var CB_PSWD = Environment.GetEnvironmentVariable("CB_PSWD").DefaultIfEmpty("password");
+            var CB_PSWD = Environment.GetEnvironmentVariable("CB_PSWD").DefaultIfEmpty("BSHtool2019!");
 #pragma warning restore CS8604 // Possible null reference argument.
 
             Console.WriteLine(
@@ -35,7 +35,7 @@ namespace Employee_Info.API.Data
             {
                 var task = Task.Run(async () => {
                     var cluster = await Couchbase.Cluster.ConnectAsync(
-                        $"couchbase://{CB_HOST}",
+                        CB_HOST,
                         CB_USER,
                         CB_PSWD);
                     Cluster = cluster;

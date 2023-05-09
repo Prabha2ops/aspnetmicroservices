@@ -16,13 +16,9 @@ namespace Employee_Info.API.Repositories
     public interface IPersonRepositary
     {
 
-        Task<IEnumerable<Person>> GetPersons();
-        
-        Task<Person> GetPerson(string email_id);
-        
-        Task<IEnumerable<Person>> GetPersonByLast_Name(string last_name);
 
-        Task<IEnumerable<Person>> GetPersonByFirst_Name(string first_name);
+
+        Task<(IEnumerable<Person>, string[])> GetPerson(string search_email_id);
 
         Task CreatePerson(Person person);
 

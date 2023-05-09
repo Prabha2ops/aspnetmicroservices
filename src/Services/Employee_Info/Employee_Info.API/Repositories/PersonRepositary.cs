@@ -12,8 +12,9 @@ using Couchbase.Search.Queries.Compound;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.Metrics;
 using System.Xml.Linq;
-using static Couchbase.Core.Diagnostics.Tracing.OuterRequestSpans.ManagerSpan;
-
+using Microsoft.Extensions.Logging;
+using Couchbase.Query;
+using System.Collections;
 
 namespace Employee_Info.API.Repositories
 {
@@ -27,27 +28,31 @@ namespace Employee_Info.API.Repositories
         }
 
 
-
-        public async Task<IEnumerable<Person>> GetPersons()
+        public async Task<(IEnumerable<Person>, string[])> GetPerson(string search_email_id)
         {
-            var query = "SELECT * FROM `master-data`.`inventory`.`persons` WHERE type = 'BSH.OPS.Tools.MasterData.Person'";
-            var queryresult = await _EmployeeContext.Cluster.QueryAsync<Person>(query);
-            return (IEnumerable<Person>)queryresult.Rows;
-        }
+            var query = "SELECT id,employee_id,first_name,last_name,mobile_no,email_id,org_unit,org_team,org_role,location" +
+                        " FROM `master-data`.`inventory`.`persons`" +
+                        " WHERE email_id = $email_id";
+                        
+            //if (search_email_id != null)
+            //{
 
-        Task<Person> IPersonRepositary.GetPerson(string email_id)
-        {
-            throw new NotImplementedException();
-        }
+              //  query += " WHERE email_id LIKE $1";
+                
+           // }
 
-        Task<IEnumerable<Person>> IPersonRepositary.GetPersonByLast_Name(string last_name)
-        {
-            throw new NotImplementedException();
-        }
 
-        Task<IEnumerable<Person>> IPersonRepositary.GetPersonByFirst_Name(string first_name)
-        {
-            throw new NotImplementedException();
+            var personResult = await _EmployeeContext.Cluster.QueryAsync<Person>(query, options => options.Parameter("email_id", search_email_id));
+
+            var q = await personResult.Rows.ToListAsync();
+
+            var context = new string[]
+            {
+                $"N1QL query - scoped to inventory: {query}; -- {search_email_id}"
+            };
+
+            return (q, context);
+            
         }
 
         Task IPersonRepositary.CreatePerson(Person person)
@@ -69,6 +74,7 @@ namespace Employee_Info.API.Repositories
         {
             throw new NotImplementedException();
         }
+               
     }
 }
     

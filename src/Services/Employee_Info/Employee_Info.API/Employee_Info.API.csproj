@@ -7,16 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="3.4.5" />
+    <PackageReference Include="CouchbaseNetClient" Version="3.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
 
 </Project>
