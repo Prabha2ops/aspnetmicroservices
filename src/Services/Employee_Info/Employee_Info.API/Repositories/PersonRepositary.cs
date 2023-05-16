@@ -15,16 +15,20 @@ using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Couchbase.Query;
 using System.Collections;
+using Couchbase.Analytics;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Newtonsoft.Json.Linq;
 
 namespace Employee_Info.API.Repositories
 {
-    public class PersonRepositary : IPersonRepositary, IDisposable
+    public class PersonRepositary : IPersonRepositary
     {
         private readonly IEmployeeContext _EmployeeContext;
-
+                
         public PersonRepositary(IEmployeeContext EmployeeContext)
         {
-            _EmployeeContext = EmployeeContext ?? throw new ArgumentNullException(nameof(EmployeeContext));
+           _EmployeeContext = EmployeeContext ?? throw new ArgumentNullException(nameof(EmployeeContext));
+           // _bucket = EmployeeContext.MasterDataBucket;
         }
 
 
@@ -33,13 +37,13 @@ namespace Employee_Info.API.Repositories
             var query = "SELECT id,employee_id,first_name,last_name,mobile_no,email_id,org_unit,org_team,org_role,location" +
                         " FROM `master-data`.`inventory`.`persons`" +
                         " WHERE email_id = $email_id";
-                        
+
             //if (search_email_id != null)
             //{
 
-              //  query += " WHERE email_id LIKE $1";
-                
-           // }
+            //  query += " WHERE email_id = $email_id";
+
+            // }
 
 
             var personResult = await _EmployeeContext.Cluster.QueryAsync<Person>(query, options => options.Parameter("email_id", search_email_id));
@@ -55,26 +59,106 @@ namespace Employee_Info.API.Repositories
             
         }
 
-        Task IPersonRepositary.CreatePerson(Person person)
+        public async Task<bool> CreatePerson(string create_id, string create_employee_id,
+        string create_first_name, string create_last_name, string create_mobile_no, string create_email_id,
+        string create_org_unit, string create_org_team, string create_org_role, string create_location)
         {
-            throw new NotImplementedException();
+            var create_query = "INSERT INTO `master-data`.`inventory`.`persons`(KEY,VALUE) " +
+                               $"VALUES ($document_id, {{ " +
+                               " `id`=$id," +
+                               " `employee_id`=$employee_id," +
+                               " `first_name`=$first_name," +
+                               " `last_name`=$last_name, " +
+                               " `mobile_no`=$mobile_no," +
+                               " `email_id`=$email_id," +
+                               " `org_unit`=$org_unit," +
+                               " `org_team`=$org_team, " +
+                               " `org_role`=$org_role," +
+                               " `location`=$location" +
+                               " }" +
+                               " }" +
+                               ") ";
+
+            var create_queryResult = await _EmployeeContext.Cluster.QueryAsync<Person>(create_query, options =>
+            options.Parameter("document_id", "emp_60800589")
+                .Parameter("id", create_id)
+                .Parameter("employee_id", create_employee_id)
+                .Parameter("first_name", create_first_name)
+                .Parameter("last_name", create_last_name)
+                .Parameter("mobile_no", create_mobile_no)
+                .Parameter("email_id", create_email_id)
+                .Parameter("org_unit", create_org_unit)
+                .Parameter("org_team", create_org_team)
+                .Parameter("org_role", create_org_role)
+                .Parameter("location", create_location)
+                );
+
+
+            return (true);
         }
 
-        Task<bool> IPersonRepositary.DeletePerson(string email_id)
+        public async Task<bool> UpdatePerson(string update_id, string update_employee_id,
+            string update_first_name, string update_last_name, string update_mobile_no, string update_email_id,
+            string update_org_unit, string update_org_team, string update_org_role, string update_location)
         {
-            throw new NotImplementedException();
+            var update_query = "UPDATE `master-data`.`inventory`.`persons`" +
+                               " SET" +
+                               " id=$id," +
+                               " employee_id=$employee_id," +
+                               " first_name=$first_name," +
+                               " last_name=$last_name, " +
+                               " mobile_no=$mobile_no," +
+                               " email_id=$email_id," +
+                               " org_unit=$org_unit," +
+                               " org_team=$org_team, " +
+                               " org_role=$org_role," +
+                               " location=$location" +
+                               " WHERE email_id = $email_id";
+
+            var update_queryResult = await _EmployeeContext.Cluster.QueryAsync<Person>(update_query, options =>
+            options.Parameter("id", update_id)
+                .Parameter("employee_id", update_employee_id)
+                .Parameter("first_name", update_first_name)
+                .Parameter("last_name", update_last_name)
+                .Parameter("mobile_no", update_mobile_no)
+                .Parameter("email_id", update_email_id)
+                .Parameter("org_unit", update_org_unit)
+                .Parameter("org_team", update_org_team)
+                .Parameter("org_role", update_org_role)
+                .Parameter("location", update_location)
+                );
+
+
+            return (true);
+                       
         }
 
-        Task<bool> IPersonRepositary.UpdatePerson(Person person)
+        public async Task<bool> UpdatePersonName(string update_first_name, string update_last_name, string update_email_id)
         {
-            throw new NotImplementedException();
+            var update_query = "UPDATE `master-data`.`inventory`.`persons`" +
+                               " SET first_name=$first_name,last_name=$last_name WHERE $email_id = $email_id";
+
+            var update_queryResult = await _EmployeeContext.Cluster.QueryAsync<Person>
+                (update_query, options => options.Parameter("first_name", update_first_name)
+                                                 .Parameter("last_name", update_last_name)
+                                                 .Parameter("email_id", update_email_id)
+                );
+
+
+            return (true);
+
         }
 
-        public void Dispose()
+        public async Task<bool> DeletePerson(string deleteby_email_id)
         {
-            throw new NotImplementedException();
+            var delete_query = "DELETE FROM `master-data`.`inventory`.`persons` WHERE email_id = $email_id";
+
+            var delete_queryResult = await _EmployeeContext.Cluster.QueryAsync<Person>(delete_query, options => options.Parameter("email_id", deleteby_email_id));
+
+            return (true);
         }
-               
+
+
     }
 }
     

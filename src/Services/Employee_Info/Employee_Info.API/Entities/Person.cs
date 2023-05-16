@@ -12,6 +12,9 @@ namespace Employee_Info.API.Entities
 {
     public class Person
     {
+        //[JsonPropertyName("document_id")]
+        //public string Document_Id { get; set; }
+
         [JsonPropertyName("id")]
         public string Id { get; set; } 
 
